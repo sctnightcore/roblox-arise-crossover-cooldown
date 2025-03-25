@@ -2,6 +2,9 @@
   import { onMount } from "svelte";
   import { fade, slide, scale } from "svelte/transition"; // เพิ่ม scale animation
 
+  // เพิ่มตัวแปรสำหรับตรวจสอบโหมดทดสอบ
+  let isTestMode = false;
+
   interface Notification {
     id: string;
     type: string;
@@ -53,7 +56,7 @@
     
     // เพิ่มการตรวจสอบ query parameter สำหรับโหมดทดสอบ
     const urlParams = new URLSearchParams(window.location.search);
-    const isTestMode = urlParams.get('test') === 'true';
+    isTestMode = urlParams.get('test') === 'true';
     
     if (isTestMode) {
       console.log("Test mode activated, adding sample notifications");
@@ -177,6 +180,11 @@
   }
 
   function checkEvents(): Notification[] {
+    // ถ้าอยู่ในโหมดทดสอบ ไม่ต้องตรวจสอบเวลาจริง
+    if (isTestMode) {
+      return [];
+    }
+    
     const now = new Date();
     const newNotifications: Notification[] = [];
 
@@ -245,24 +253,35 @@
   }
 
   function updateNotifications(): void {
-    // เพิ่มการแจ้งเตือนใหม่
-    const newNotifications = checkEvents();
-    if (newNotifications.length > 0) {
-      // ปรับปรุงตรรกะการกรองเพื่อป้องกันการแจ้งเตือนซ้ำ
-      const filteredNewNotifications = newNotifications.filter((newNotif) => {
-        return !notifications.some(
-          (existing) =>
-            existing.type === newNotif.type && existing.time === newNotif.time
-        );
-      });
+    // เพิ่มการแจ้งเตือนใหม่ (เฉพาะเมื่อไม่ได้อยู่ในโหมดทดสอบ)
+    if (!isTestMode) {
+      const newNotifications = checkEvents();
+      if (newNotifications.length > 0) {
+        // ปรับปรุงตรรกะการกรองเพื่อป้องกันการแจ้งเตือนซ้ำ
+        const filteredNewNotifications = newNotifications.filter((newNotif) => {
+          return !notifications.some(
+            (existing) =>
+              existing.type === newNotif.type && existing.time === newNotif.time
+          );
+        });
 
-      if (filteredNewNotifications.length > 0) {
-        notifications = [...notifications, ...filteredNewNotifications];
+        if (filteredNewNotifications.length > 0) {
+          notifications = [...notifications, ...filteredNewNotifications];
+        }
       }
     }
 
     // อัปเดตเวลาที่เหลือสำหรับการแจ้งเตือนที่มีอยู่
     notifications = notifications.map((notification) => {
+      // ในโหมดทดสอบ ลดเวลาลงทีละ 1 วินาที
+      if (isTestMode) {
+        return {
+          ...notification,
+          remaining: Math.max(0, notification.remaining - 1)
+        };
+      }
+      
+      // โหมดปกติ คำนวณเวลาจากเวลาเป้าหมาย
       let targetHour, targetMinute;
 
       if (notification.type === notificationTypes.SRANK.name) {
@@ -281,6 +300,14 @@
 
     // ลบการแจ้งเตือนหลังจาก 30 วินาที ผ่านไปนับจากเวลาเป้าหมาย
     notifications = notifications.filter((n) => {
+      // ในโหมดทดสอบ ลบการแจ้งเตือนเมื่อเวลาเป็น 0 และผ่านไปแล้ว 5 วินาที
+      if (isTestMode) {
+        if (n.remaining > 0) return true;
+        const timeSinceZero = (Date.now() - n.createdAt) / 1000 - n.initialRemaining;
+        return timeSinceZero < 5; // แสดง "Now!" เป็นเวลา 5 วินาทีในโหมดทดสอบ
+      }
+      
+      // โหมดปกติ
       let targetHour, targetMinute;
 
       if (n.type === notificationTypes.SRANK.name) {
