@@ -291,17 +291,16 @@
       }
 
       const timeLeft = getTimeRemaining(targetHour, targetMinute);
-      
-      // ตรวจสอบว่าเหตุการณ์เพิ่งผ่านไป
-      const justPassed = timeLeft === 0;
-      
-      // คำนวณเวลาที่ผ่านไปตั้งแต่เหตุการณ์เกิดขึ้น (ในกรณีที่เหตุการณ์ผ่านไปแล้ว)
-      const timeSinceCreation = (Date.now() - n.createdAt) / 1000;
-      
+
       // เก็บไว้ถ้า:
       // 1. เวลายังไม่ผ่านไป (timeLeft > 0) หรือ
-      // 2. เหตุการณ์เพิ่งเกิดขึ้นและยังไม่เกิน 30 วินาที
-      return timeLeft > 0 || (justPassed && timeSinceCreation < 30);
+      // 2. น้อยกว่า 30 วินาทีที่ผ่านมาตั้งแต่เหตุการณ์ (timeLeft อยู่ระหว่าง 86370 และ 86400)
+      // 3. หรือเพิ่งผ่านเหตุการณ์ (ภายใน 30 วินาที)
+      return (
+        timeLeft > 0 ||
+        (timeLeft >= 86370 && timeLeft < 86400) ||
+        Math.abs(timeLeft) < 30
+      );
     });
   }
 
