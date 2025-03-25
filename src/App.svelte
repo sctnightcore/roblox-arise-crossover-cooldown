@@ -71,7 +71,7 @@
     "07:00",
   ];
   const raidStartTimes: string[] = ["15", "45"];
-  const mountSpawnTimes: string[] = ["15", "30", "45", '58']; // ทุกๆ 15 นาที
+  const mountSpawnTimes: string[] = ["15", "30", "45"]; // ทุกๆ 15 นาที
 
   function getTimeRemaining(targetHour: number, targetMinute: number): number {
     const now = new Date();
