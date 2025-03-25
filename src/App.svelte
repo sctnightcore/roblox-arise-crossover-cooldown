@@ -50,15 +50,74 @@
 
   onMount(() => {
     console.log("Component mounted, starting interval");
+    
+    // เพิ่มการตรวจสอบ query parameter สำหรับโหมดทดสอบ
+    const urlParams = new URLSearchParams(window.location.search);
+    const isTestMode = urlParams.get('test') === 'true';
+    
+    if (isTestMode) {
+      console.log("Test mode activated, adding sample notifications");
+      addSampleNotifications();
+    }
+    
     const interval = setInterval(() => {
       currentTime = new Date();
       updateNotifications();
     }, 1000);
+    
     return () => {
       console.log("Component unmounted, clearing interval");
       clearInterval(interval);
     };
   });
+
+  // เพิ่มฟังก์ชันสำหรับสร้างการแจ้งเตือนตัวอย่าง
+  function addSampleNotifications() {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // สร้างตัวอย่างการแจ้งเตือนที่มีเวลาแตกต่างกัน
+    const sampleNotifications = [
+      // ตัวอย่างการแจ้งเตือนที่กำลังจะเกิดขึ้นในอีก 5 นาที
+      createNotification(
+        notificationTypes.DUNGEON.name,
+        `${currentHour.toString().padStart(2, "0")}:${(currentMinute + 5).toString().padStart(2, "0")}`,
+        300 // 5 นาที
+      ),
+      
+      // ตัวอย่างการแจ้งเตือนที่กำลังจะเกิดขึ้นในอีก 1 นาที
+      createNotification(
+        notificationTypes.RAID.name,
+        `${currentHour.toString().padStart(2, "0")}:${(currentMinute + 1).toString().padStart(2, "0")}`,
+        60 // 1 นาที
+      ),
+      
+      // ตัวอย่างการแจ้งเตือนที่กำลังจะเกิดขึ้นในอีก 30 วินาที
+      createNotification(
+        notificationTypes.SRANK.name,
+        `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`,
+        30 // 30 วินาที
+      ),
+      
+      // ตัวอย่างการแจ้งเตือนที่กำลังจะเกิดขึ้นในอีก 10 วินาที
+      createNotification(
+        notificationTypes.MOUNT.name,
+        `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`,
+        10 // 10 วินาที
+      ),
+      
+      // ตัวอย่างการแจ้งเตือนที่เพิ่งเกิดขึ้น
+      createNotification(
+        notificationTypes.DUNGEON.name,
+        `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`,
+        0 // เกิดขึ้นแล้ว
+      )
+    ];
+    
+    // เพิ่มการแจ้งเตือนตัวอย่างเข้าไปในรายการ
+    notifications = [...notifications, ...sampleNotifications];
+  }
 
   const dungeonSpawnTimes: string[] = ["00", "30"];
   const sRankTimes: string[] = [
@@ -71,7 +130,7 @@
     "07:00",
   ];
   const raidStartTimes: string[] = ["15", "45"];
-  const mountSpawnTimes: string[] = ["15", "30", "45"]; // ทุกๆ 15 นาที
+  const mountSpawnTimes: string[] = ["15", "30", "45", '58']; // ทุกๆ 15 นาที
 
   function getTimeRemaining(targetHour: number, targetMinute: number): number {
     const now = new Date();
