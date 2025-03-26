@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { fade, slide, scale } from "svelte/transition"; // เพิ่ม scale animation
+  import { fade, slide } from "svelte/transition";
 
-  // เพิ่มตัวแปรสำหรับตรวจสอบโหมดทดสอบ
   let isTestMode = false;
 
   interface Notification {
@@ -11,15 +10,14 @@
     time: string;
     remaining: number;
     createdAt: number;
-    initialRemaining: number; // เพิ่มเพื่อติดตามเวลาเริ่มต้น
-    icon: string; // เพิ่มเพื่อเก็บไอคอน
-    color: string; // เพิ่มเพื่อเก็บสี
+    initialRemaining: number;
+    icon: string;
+    color: string;
   }
 
   let currentTime: Date = new Date();
   let notifications: Notification[] = [];
 
-  // กำหนดประเภทการแจ้งเตือนพร้อมเวลา ไอคอน และสีที่เกี่ยวข้อง
   const notificationTypes = {
     DUNGEON: {
       name: "Dungeon Spawn",
@@ -27,34 +25,33 @@
       window: 300,
       icon: "🏰",
       color: "#4682b4",
-    }, // ดันเจี้ยน: แสดงก่อน 5 นาที สีฟ้า
+    },
     SRANK: {
       name: "S-Rank Dungeon",
       minutes: 5,
       window: 300,
       icon: "⭐",
       color: "#e6a817",
-    }, // ดันเจี้ยนระดับ S: แสดงก่อน 0 นาที สีทอง
+    },
     RAID: {
       name: "Raid Start",
       minutes: 15,
       window: 300,
       icon: "⚔️",
       color: "#d35400",
-    }, // การโจมตีหมู่: แสดงก่อน 15 นาที สีส้ม
+    },
     MOUNT: {
       name: "Mount Spawn",
       minutes: 15,
       window: 300,
       icon: "🐎",
       color: "#2ecc71",
-    }, // สัตว์ขี่: แสดงก่อน 15 นาที สีเขียว
+    },
   };
 
   onMount(() => {
     console.log("Component mounted, starting interval");
     
-    // เพิ่มการตรวจสอบ query parameter สำหรับโหมดทดสอบ
     const urlParams = new URLSearchParams(window.location.search);
     isTestMode = urlParams.get('test') === 'true';
     
@@ -74,51 +71,39 @@
     };
   });
 
-  // เพิ่มฟังก์ชันสำหรับสร้างการแจ้งเตือนตัวอย่าง
   function addSampleNotifications() {
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     
-    // สร้างตัวอย่างการแจ้งเตือนที่มีเวลาแตกต่างกัน
     const sampleNotifications = [
-      // ตัวอย่างการแจ้งเตือนที่กำลังจะเกิดขึ้นในอีก 5 นาที
       createNotification(
         notificationTypes.DUNGEON.name,
         `${currentHour.toString().padStart(2, "0")}:${(currentMinute + 5).toString().padStart(2, "0")}`,
-        300 // 5 นาที
+        300
       ),
-      
-      // ตัวอย่างการแจ้งเตือนที่กำลังจะเกิดขึ้นในอีก 1 นาที
       createNotification(
         notificationTypes.RAID.name,
         `${currentHour.toString().padStart(2, "0")}:${(currentMinute + 1).toString().padStart(2, "0")}`,
-        60 // 1 นาที
+        60
       ),
-      
-      // ตัวอย่างการแจ้งเตือนที่กำลังจะเกิดขึ้นในอีก 30 วินาที
       createNotification(
         notificationTypes.SRANK.name,
         `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`,
-        30 // 30 วินาที
+        30
       ),
-      
-      // ตัวอย่างการแจ้งเตือนที่กำลังจะเกิดขึ้นในอีก 10 วินาที
       createNotification(
         notificationTypes.MOUNT.name,
         `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`,
-        10 // 10 วินาที
+        10
       ),
-      
-      // ตัวอย่างการแจ้งเตือนที่เพิ่งเกิดขึ้น
       createNotification(
         notificationTypes.DUNGEON.name,
         `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`,
-        0 // เกิดขึ้นแล้ว
+        0
       )
     ];
     
-    // เพิ่มการแจ้งเตือนตัวอย่างเข้าไปในรายการ
     notifications = [...notifications, ...sampleNotifications];
   }
 
@@ -133,7 +118,7 @@
     "07:00",
   ];
   const raidStartTimes: string[] = ["15", "45"];
-  const mountSpawnTimes: string[] = ["15", "30", "45", '58']; // ทุกๆ 15 นาที
+  const mountSpawnTimes: string[] = ["15", "30", "45", "58"];
 
   function getTimeRemaining(targetHour: number, targetMinute: number): number {
     const now = new Date();
@@ -160,7 +145,6 @@
     time: string,
     remaining: number
   ): Notification {
-    // ค้นหาการตั้งค่าประเภทการแจ้งเตือน
     const typeConfig = Object.values(notificationTypes).find(
       (t) => t.name === type
     );
@@ -174,13 +158,12 @@
       remaining,
       initialRemaining: remaining,
       createdAt: Date.now(),
-      icon: icon,
-      color: color, // เพิ่มสีให้กับการแจ้งเตือน
+      icon,
+      color,
     };
   }
 
   function checkEvents(): Notification[] {
-    // ถ้าอยู่ในโหมดทดสอบ ไม่ต้องตรวจสอบเวลาจริง
     if (isTestMode) {
       return [];
     }
@@ -188,62 +171,50 @@
     const now = new Date();
     const newNotifications: Notification[] = [];
 
-    // ดันเจี้ยน - แสดง 5 นาทีก่อนและหลังจากเกิด 1 นาที
     dungeonSpawnTimes.forEach((minute) => {
       const timeLeft = getTimeRemaining(now.getHours(), parseInt(minute));
-      // แสดงการแจ้งเตือนถ้าเหลือเวลาน้อยกว่า 5 นาที (300 วินาที)
-      // หรือถ้าเหตุการณ์เพิ่งเกิดขึ้น (ภายใน 60 วินาทีที่ผ่านมา)
       if (timeLeft <= 300 || (timeLeft >= 86340 && timeLeft < 86400)) {
         const event = createNotification(
           notificationTypes.DUNGEON.name,
           `${now.getHours().toString().padStart(2, "0")}:${minute}`,
-          timeLeft > 86000 ? 0 : timeLeft // ถ้าเพิ่งผ่านเหตุการณ์ แสดงเป็น "Now!"
+          timeLeft > 86000 ? 0 : timeLeft
         );
         newNotifications.push(event);
       }
     });
 
-    // ดันเจี้ยนระดับ S - แสดง 5 นาทีก่อนและหลังจากเกิด 1 นาที
     sRankTimes.forEach((time) => {
       const [hour, minute] = time.split(":").map(Number);
       const timeLeft = getTimeRemaining(hour, minute);
-      // แสดงการแจ้งเตือนถ้าเหลือเวลาน้อยกว่า 5 นาที (300 วินาที)
-      // หรือถ้าเหตุการณ์เพิ่งเกิดขึ้น (ภายใน 60 วินาทีที่ผ่านมา)
       if (timeLeft <= 300 || (timeLeft >= 86340 && timeLeft < 86400)) {
         const event = createNotification(
           notificationTypes.SRANK.name,
           time,
-          timeLeft > 86000 ? 0 : timeLeft // ถ้าเพิ่งผ่านเหตุการณ์ แสดงเป็น "Now!"
+          timeLeft > 86000 ? 0 : timeLeft
         );
         newNotifications.push(event);
       }
     });
 
-    // การโจมตีหมู่ - แสดง 5 นาทีก่อนและหลังจากเกิด 1 นาที
     raidStartTimes.forEach((minute) => {
       const timeLeft = getTimeRemaining(now.getHours(), parseInt(minute));
-      // แสดงการแจ้งเตือนถ้าเหลือเวลาน้อยกว่า 5 นาที (300 วินาที)
-      // หรือถ้าเหตุการณ์เพิ่งเกิดขึ้น (ภายใน 60 วินาทีที่ผ่านมา)
       if (timeLeft <= 300 || (timeLeft >= 86340 && timeLeft < 86400)) {
         const event = createNotification(
           notificationTypes.RAID.name,
           `${now.getHours().toString().padStart(2, "0")}:${minute}`,
-          timeLeft > 86000 ? 0 : timeLeft // ถ้าเพิ่งผ่านเหตุการณ์ แสดงเป็น "Now!"
+          timeLeft > 86000 ? 0 : timeLeft
         );
         newNotifications.push(event);
       }
     });
 
-    // สัตว์ขี่ - แสดง 5 นาทีก่อนและหลังจากเกิด 1 นาที
     mountSpawnTimes.forEach((minute) => {
       const timeLeft = getTimeRemaining(now.getHours(), parseInt(minute));
-      // แสดงการแจ้งเตือนถ้าเหลือเวลาน้อยกว่า 5 นาที (300 วินาที)
-      // หรือถ้าเหตุการณ์เพิ่งเกิดขึ้น (ภายใน 60 วินาทีที่ผ่านมา)
       if (timeLeft <= 300 || (timeLeft >= 86340 && timeLeft < 86400)) {
         const event = createNotification(
           notificationTypes.MOUNT.name,
           `${now.getHours().toString().padStart(2, "0")}:${minute}`,
-          timeLeft > 86000 ? 0 : timeLeft // ถ้าเพิ่งผ่านเหตุการณ์ แสดงเป็น "Now!"
+          timeLeft > 86000 ? 0 : timeLeft
         );
         newNotifications.push(event);
       }
@@ -253,27 +224,22 @@
   }
 
   function updateNotifications(): void {
-    // เพิ่มการแจ้งเตือนใหม่ (เฉพาะเมื่อไม่ได้อยู่ในโหมดทดสอบ)
     if (!isTestMode) {
       const newNotifications = checkEvents();
       if (newNotifications.length > 0) {
-        // ปรับปรุงตรรกะการกรองเพื่อป้องกันการแจ้งเตือนซ้ำ
         const filteredNewNotifications = newNotifications.filter((newNotif) => {
           return !notifications.some(
             (existing) =>
               existing.type === newNotif.type && existing.time === newNotif.time
           );
         });
-
         if (filteredNewNotifications.length > 0) {
           notifications = [...notifications, ...filteredNewNotifications];
         }
       }
     }
 
-    // อัปเดตเวลาที่เหลือสำหรับการแจ้งเตือนที่มีอยู่
     notifications = notifications.map((notification) => {
-      // ในโหมดทดสอบ ลดเวลาลงทีละ 1 วินาที
       if (isTestMode) {
         return {
           ...notification,
@@ -281,9 +247,7 @@
         };
       }
       
-      // โหมดปกติ คำนวณเวลาจากเวลาเป้าหมาย
       let targetHour, targetMinute;
-
       if (notification.type === notificationTypes.SRANK.name) {
         [targetHour, targetMinute] = notification.time.split(":").map(Number);
       } else {
@@ -294,22 +258,23 @@
       const timeLeft = getTimeRemaining(targetHour, targetMinute);
       return {
         ...notification,
-        remaining: timeLeft > 86000 ? 0 : timeLeft, // ถ้าเพิ่งผ่านเหตุการณ์ แสดงเป็น "Now!"
+        remaining: timeLeft > 86000 ? 0 : timeLeft,
       };
     });
 
-    // ลบการแจ้งเตือนหลังจาก 30 วินาที ผ่านไปนับจากเวลาเป้าหมาย
     notifications = notifications.filter((n) => {
-      // ในโหมดทดสอบ ลบการแจ้งเตือนเมื่อเวลาเป็น 0 และผ่านไปแล้ว 5 วินาที
+      const typeConfig = Object.values(notificationTypes).find(
+        (t) => t.name === n.type
+      );
+      const windowSeconds = typeConfig?.window || 300;
+
       if (isTestMode) {
         if (n.remaining > 0) return true;
         const timeSinceZero = (Date.now() - n.createdAt) / 1000 - n.initialRemaining;
-        return timeSinceZero < 5; // แสดง "Now!" เป็นเวลา 5 วินาทีในโหมดทดสอบ
+        return timeSinceZero < windowSeconds;
       }
-      
-      // โหมดปกติ
-      let targetHour, targetMinute;
 
+      let targetHour, targetMinute;
       if (n.type === notificationTypes.SRANK.name) {
         [targetHour, targetMinute] = n.time.split(":").map(Number);
       } else {
@@ -318,30 +283,25 @@
       }
 
       const timeLeft = getTimeRemaining(targetHour, targetMinute);
+      const secondsSinceEvent = timeLeft > 86000 ? (86400 - timeLeft) : -timeLeft;
 
-      // เก็บไว้ถ้า:
-      // 1. เวลายังไม่ผ่านไป (timeLeft > 0) หรือ
-      // 2. น้อยกว่า 30 วินาทีที่ผ่านมาตั้งแต่เหตุการณ์ (timeLeft อยู่ระหว่าง 86370 และ 86400)
-      // 3. หรือเพิ่งผ่านเหตุการณ์ (ภายใน 30 วินาที)
       return (
         timeLeft > 0 ||
-        (timeLeft >= 86370 && timeLeft < 86400) ||
-        Math.abs(timeLeft) < 30
+        (timeLeft >= 86340 && timeLeft < 86400) ||
+        secondsSinceEvent < windowSeconds
       );
     });
   }
 
-  // เพิ่มฟังก์ชันเพื่อตรวจสอบว่าเวลาใกล้หมดหรือไม่
   function isUrgent(remaining: number): boolean {
-    return remaining <= 60 && remaining > 0; // เวลาเหลือน้อยกว่า 1 นาที และยังไม่หมด
+    return remaining <= 60 && remaining > 0;
   }
 
   function isVeryUrgent(remaining: number): boolean {
-    return remaining <= 30 && remaining > 0; // เวลาเหลือน้อยกว่า 30 วินาที และยังไม่หมด
+    return remaining <= 30 && remaining > 0;
   }
 </script>
 
-<!-- เพิ่ม wrapper div ที่มีพื้นหลังชัดเจน -->
 <div class="app-wrapper">
   <div class="toast-container">
     {#each notifications as notification (notification.id)}
@@ -391,14 +351,13 @@
     font-family: "Prompt", sans-serif !important;
   }
 
-  /* เพิ่ม wrapper สำหรับทั้งแอพ */
   .app-wrapper {
     width: 100%;
     height: 100%;
     position: fixed;
     top: 0;
     left: 0;
-    background-color: transparent; /* ทำให้พื้นหลังโปร่งใส */
+    background-color: transparent;
     z-index: 999;
   }
 
@@ -411,44 +370,37 @@
   }
   
   .toast {
-    background: rgba(255, 255, 255, 0.95); /* เพิ่มความทึบให้กับพื้นหลัง */
+    background: rgba(255, 255, 255, 0.95);
     color: #000000;
     padding: 12px 16px;
     margin: 8px 0;
     border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); /* เพิ่มเงาให้ชัดเจนขึ้น */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     border-left: 4px solid;
     font-size: 14px;
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
-    backdrop-filter: blur(5px); /* เพิ่ม blur effect เพื่อให้เห็นชัดเจนขึ้น */
+    backdrop-filter: blur(5px);
   }
 
-  /* เพิ่มคลาสสำหรับการแจ้งเตือนเร่งด่วน */
   .toast.urgent {
-    background-color: rgba(255, 248, 225, 0.95); /* พื้นหลังสีเหลืองอ่อนพร้อมความทึบ */
+    background-color: rgba(255, 248, 225, 0.95);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     transform: scale(1.05);
   }
 
   .toast.very-urgent {
-    background-color: rgba(255, 235, 238, 0.95); /* พื้นหลังสีแดงอ่อนพร้อมความทึบ */
+    background-color: rgba(255, 235, 238, 0.95);
     box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4);
     transform: scale(1.1);
     animation: pulse 1.5s infinite;
   }
 
   @keyframes pulse {
-    0% {
-      transform: scale(1.05);
-    }
-    50% {
-      transform: scale(1.1);
-    }
-    100% {
-      transform: scale(1.05);
-    }
+    0% { transform: scale(1.05); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1.05); }
   }
 
   .notification-content {
@@ -475,7 +427,6 @@
     white-space: nowrap;
   }
 
-  /* เพิ่มสไตล์สำหรับการนับถอยหลังเร่งด่วน */
   .countdown.urgent {
     font-weight: bold;
     font-size: 14px;
@@ -490,14 +441,8 @@
   }
 
   @keyframes blink {
-    0% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
-    100% {
-      opacity: 1;
-    }
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
   }
 </style>
