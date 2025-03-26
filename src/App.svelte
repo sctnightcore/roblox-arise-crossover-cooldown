@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { fade, slide } from "svelte/transition";
+  import { fade, slide, fly } from "svelte/transition";
 
   let isTestMode = false;
 
@@ -19,52 +19,24 @@
   let notifications: Notification[] = [];
 
   const notificationTypes = {
-    DUNGEON: {
-      name: "Dungeon Spawn",
-      minutes: 5,
-      window: 300,
-      icon: "🏰",
-      color: "#4682b4",
-    },
-    SRANK: {
-      name: "S-Rank Dungeon",
-      minutes: 5,
-      window: 300,
-      icon: "⭐",
-      color: "#e6a817",
-    },
-    RAID: {
-      name: "Raid Start",
-      minutes: 15,
-      window: 300,
-      icon: "⚔️",
-      color: "#d35400",
-    },
-    MOUNT: {
-      name: "Mount Spawn",
-      minutes: 15,
-      window: 300,
-      icon: "🐎",
-      color: "#2ecc71",
-    },
+    DUNGEON: { name: "Dungeon Spawn", minutes: 5, window: 300, icon: "🏰", color: "#4682b4" },
+    SRANK: { name: "S-Rank Dungeon", minutes: 5, window: 300, icon: "⭐", color: "#e6a817" },
+    RAID: { name: "Raid Start", minutes: 15, window: 300, icon: "⚔️", color: "#d35400" },
+    MOUNT: { name: "Mount Spawn", minutes: 15, window: 300, icon: "🐎", color: "#2ecc71" },
   };
 
   onMount(() => {
     console.log("Component mounted, starting interval");
-    
     const urlParams = new URLSearchParams(window.location.search);
-    isTestMode = urlParams.get('test') === 'true';
-    
+    isTestMode = urlParams.get("test") === "true";
     if (isTestMode) {
       console.log("Test mode activated, adding sample notifications");
       addSampleNotifications();
     }
-    
     const interval = setInterval(() => {
       currentTime = new Date();
       updateNotifications();
     }, 1000);
-    
     return () => {
       console.log("Component unmounted, clearing interval");
       clearInterval(interval);
@@ -75,48 +47,18 @@
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
-    
     const sampleNotifications = [
-      createNotification(
-        notificationTypes.DUNGEON.name,
-        `${currentHour.toString().padStart(2, "0")}:${(currentMinute + 5).toString().padStart(2, "0")}`,
-        300
-      ),
-      createNotification(
-        notificationTypes.RAID.name,
-        `${currentHour.toString().padStart(2, "0")}:${(currentMinute + 1).toString().padStart(2, "0")}`,
-        60
-      ),
-      createNotification(
-        notificationTypes.SRANK.name,
-        `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`,
-        30
-      ),
-      createNotification(
-        notificationTypes.MOUNT.name,
-        `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`,
-        10
-      ),
-      createNotification(
-        notificationTypes.DUNGEON.name,
-        `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`,
-        0
-      )
+      createNotification(notificationTypes.DUNGEON.name, `${currentHour.toString().padStart(2, "0")}:${(currentMinute + 5).toString().padStart(2, "0")}`, 300),
+      createNotification(notificationTypes.RAID.name, `${currentHour.toString().padStart(2, "0")}:${(currentMinute + 1).toString().padStart(2, "0")}`, 60),
+      createNotification(notificationTypes.SRANK.name, `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`, 30),
+      createNotification(notificationTypes.MOUNT.name, `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`, 10),
+      createNotification(notificationTypes.DUNGEON.name, `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`, 0),
     ];
-    
     notifications = [...notifications, ...sampleNotifications];
   }
 
   const dungeonSpawnTimes: string[] = ["00", "30"];
-  const sRankTimes: string[] = [
-    "13:00",
-    "16:00",
-    "19:00",
-    "22:00",
-    "01:00",
-    "04:00",
-    "07:00",
-  ];
+  const sRankTimes: string[] = ["13:00", "16:00", "19:00", "22:00", "01:00", "04:00", "07:00"];
   const raidStartTimes: string[] = ["15", "45"];
   const mountSpawnTimes: string[] = ["15", "30", "45"];
 
@@ -125,101 +67,51 @@
     let target = new Date(now);
     target.setHours(targetHour, targetMinute, 0, 0);
     if (target < now) target.setDate(target.getDate() + 1);
-    const remaining = Math.max(
-      0,
-      Math.floor((target.getTime() - now.getTime()) / 1000)
-    );
-    return remaining;
+    return Math.max(0, Math.floor((target.getTime() - now.getTime()) / 1000));
   }
 
   function formatCountdown(seconds: number): string {
-    const mins = Math.floor(seconds / 60)
-      .toString()
-      .padStart(2, "0");
+    const mins = Math.floor(seconds / 60).toString().padStart(2, "0");
     const secs = (seconds % 60).toString().padStart(2, "0");
     return `${mins}:${secs}`;
   }
 
-  function createNotification(
-    type: string,
-    time: string,
-    remaining: number
-  ): Notification {
-    const typeConfig = Object.values(notificationTypes).find(
-      (t) => t.name === type
-    );
+  function createNotification(type: string, time: string, remaining: number): Notification {
+    const typeConfig = Object.values(notificationTypes).find((t) => t.name === type);
     const icon = typeConfig?.icon || "🔔";
     const color = typeConfig?.color || "#4682b4";
-
-    return {
-      id: `${type}-${time}-${Date.now()}`,
-      type,
-      time,
-      remaining,
-      initialRemaining: remaining,
-      createdAt: Date.now(),
-      icon,
-      color,
-    };
+    return { id: `${type}-${time}-${Date.now()}`, type, time, remaining, initialRemaining: remaining, createdAt: Date.now(), icon, color };
   }
 
   function checkEvents(): Notification[] {
-    if (isTestMode) {
-      return [];
-    }
-    
+    if (isTestMode) return [];
     const now = new Date();
     const newNotifications: Notification[] = [];
-
     dungeonSpawnTimes.forEach((minute) => {
       const timeLeft = getTimeRemaining(now.getHours(), parseInt(minute));
       if (timeLeft <= 300 || (timeLeft >= 86340 && timeLeft < 86400)) {
-        const event = createNotification(
-          notificationTypes.DUNGEON.name,
-          `${now.getHours().toString().padStart(2, "0")}:${minute}`,
-          timeLeft > 86000 ? 0 : timeLeft
-        );
-        newNotifications.push(event);
+        newNotifications.push(createNotification(notificationTypes.DUNGEON.name, `${now.getHours().toString().padStart(2, "0")}:${minute}`, timeLeft > 86000 ? 0 : timeLeft));
       }
     });
-
     sRankTimes.forEach((time) => {
       const [hour, minute] = time.split(":").map(Number);
       const timeLeft = getTimeRemaining(hour, minute);
       if (timeLeft <= 300 || (timeLeft >= 86340 && timeLeft < 86400)) {
-        const event = createNotification(
-          notificationTypes.SRANK.name,
-          time,
-          timeLeft > 86000 ? 0 : timeLeft
-        );
-        newNotifications.push(event);
+        newNotifications.push(createNotification(notificationTypes.SRANK.name, time, timeLeft > 86000 ? 0 : timeLeft));
       }
     });
-
     raidStartTimes.forEach((minute) => {
       const timeLeft = getTimeRemaining(now.getHours(), parseInt(minute));
       if (timeLeft <= 300 || (timeLeft >= 86340 && timeLeft < 86400)) {
-        const event = createNotification(
-          notificationTypes.RAID.name,
-          `${now.getHours().toString().padStart(2, "0")}:${minute}`,
-          timeLeft > 86000 ? 0 : timeLeft
-        );
-        newNotifications.push(event);
+        newNotifications.push(createNotification(notificationTypes.RAID.name, `${now.getHours().toString().padStart(2, "0")}:${minute}`, timeLeft > 86000 ? 0 : timeLeft));
       }
     });
-
     mountSpawnTimes.forEach((minute) => {
       const timeLeft = getTimeRemaining(now.getHours(), parseInt(minute));
       if (timeLeft <= 300 || (timeLeft >= 86340 && timeLeft < 86400)) {
-        const event = createNotification(
-          notificationTypes.MOUNT.name,
-          `${now.getHours().toString().padStart(2, "0")}:${minute}`,
-          timeLeft > 86000 ? 0 : timeLeft
-        );
-        newNotifications.push(event);
+        newNotifications.push(createNotification(notificationTypes.MOUNT.name, `${now.getHours().toString().padStart(2, "0")}:${minute}`, timeLeft > 86000 ? 0 : timeLeft));
       }
     });
-
     return newNotifications;
   }
 
@@ -228,64 +120,33 @@
       const newNotifications = checkEvents();
       if (newNotifications.length > 0) {
         const filteredNewNotifications = newNotifications.filter((newNotif) => {
-          return !notifications.some(
-            (existing) =>
-              existing.type === newNotif.type && existing.time === newNotif.time
-          );
+          return !notifications.some((existing) => existing.type === newNotif.type && existing.time === newNotif.time);
         });
-        if (filteredNewNotifications.length > 0) {
-          notifications = [...notifications, ...filteredNewNotifications];
-        }
+        if (filteredNewNotifications.length > 0) notifications = [...notifications, ...filteredNewNotifications];
       }
     }
 
     notifications = notifications.map((notification) => {
       if (isTestMode) {
-        return {
-          ...notification,
-          remaining: Math.max(0, notification.remaining - 1),
-        };
+        return { ...notification, remaining: Math.max(0, notification.remaining - 1) };
       }
 
       let targetHour, targetMinute;
-      if (notification.type === notificationTypes.SRANK.name) {
-        [targetHour, targetMinute] = notification.time.split(":").map(Number);
-      } else {
-        targetHour = parseInt(notification.time.split(":")[0]);
-        targetMinute = parseInt(notification.time.split(":")[1]);
-      }
-
+      if (notification.type === notificationTypes.SRANK.name) [targetHour, targetMinute] = notification.time.split(":").map(Number);
+      else [targetHour, targetMinute] = [parseInt(notification.time.split(":")[0]), parseInt(notification.time.split(":")[1])];
       const timeLeft = getTimeRemaining(targetHour, targetMinute);
-      return {
-        ...notification,
-        remaining: timeLeft > 86000 ? 0 : timeLeft,
-      };
+      return { ...notification, remaining: timeLeft > 86000 ? 0 : timeLeft };
     });
 
-    // กรองการแจ้งเตือนที่เลย window ออกไป
     notifications = notifications.filter((n) => {
-      const typeConfig = Object.values(notificationTypes).find(
-        (t) => t.name === n.type
-      );
+      const typeConfig = Object.values(notificationTypes).find((t) => t.name === n.type);
       const windowSeconds = typeConfig?.window || 300;
-
       let targetHour, targetMinute;
-      if (n.type === notificationTypes.SRANK.name) {
-        [targetHour, targetMinute] = n.time.split(":").map(Number);
-      } else {
-        targetHour = parseInt(n.time.split(":")[0]);
-        targetMinute = parseInt(n.time.split(":")[1]);
-      }
-
+      if (n.type === notificationTypes.SRANK.name) [targetHour, targetMinute] = n.time.split(":").map(Number);
+      else [targetHour, targetMinute] = [parseInt(n.time.split(":")[0]), parseInt(n.time.split(":")[1])];
       const timeLeft = getTimeRemaining(targetHour, targetMinute);
       const secondsSinceEvent = timeLeft > 86000 ? (86400 - timeLeft) : -timeLeft;
-
-      // เงื่อนไข: ถ้า remaining > 0 หรือยังอยู่ใน window (secondsSinceEvent < windowSeconds)
-      return (
-        timeLeft > 0 || // ยังไม่ถึงเวลา
-        (timeLeft >= 86340 && timeLeft < 86400) || // กรณีข้ามวัน
-        secondsSinceEvent < windowSeconds // ยังอยู่ใน window หลังจากเหตุการณ์เกิด
-      );
+      return timeLeft > 0 || (timeLeft >= 86340 && timeLeft < 86400) || secondsSinceEvent < windowSeconds;
     });
   }
 
@@ -305,8 +166,8 @@
         class="toast"
         class:urgent={isUrgent(notification.remaining)}
         class:very-urgent={isVeryUrgent(notification.remaining)}
-        in:slide={{ duration: 400, delay: 100 }}
-        out:fade={{ duration: 400 }}
+        in:fly={{ x: 300, duration: 600, delay: 100 }}
+        out:fly={{ x: 300, duration: 600 }}
         style="border-left-color: {notification.color}"
       >
         <div class="notification-content">
@@ -314,9 +175,7 @@
           <div class="notification-text">
             <span
               class:highlight={notification.remaining <= 60}
-              style="color: {notification.remaining <= 60
-                ? '#ff7f50'
-                : '#000000'}"
+              style="color: {notification.remaining <= 60 ? '#ff7f50' : '#000000'}"
             >
               {notification.type} at {notification.time}
             </span>
@@ -325,14 +184,9 @@
             class="countdown"
             class:urgent={isUrgent(notification.remaining)}
             class:very-urgent={isVeryUrgent(notification.remaining)}
-            style="color: {!isUrgent(notification.remaining) &&
-            !isVeryUrgent(notification.remaining)
-              ? notification.color
-              : ''}"
+            style="color: {!isUrgent(notification.remaining) && !isVeryUrgent(notification.remaining) ? notification.color : ''}"
           >
-            {notification.remaining === 0
-              ? "Now!"
-              : formatCountdown(notification.remaining)}
+            {notification.remaining === 0 ? "Now!" : formatCountdown(notification.remaining)}
           </span>
         </div>
       </div>
@@ -361,41 +215,42 @@
     position: fixed;
     bottom: 20px;
     right: 20px;
-    width: 300px;
+    width: 380px;
     z-index: 1000;
   }
-  
+
   .toast {
     background: rgba(255, 255, 255, 0.95);
     color: #000000;
-    padding: 12px 16px;
-    margin: 8px 0;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    border-left: 4px solid;
-    font-size: 14px;
+    padding: 16px 20px;
+    margin: 10px 0;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-left: 6px solid;
+    font-size: 16px;
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(8px);
   }
 
   .toast.urgent {
     background-color: rgba(255, 248, 225, 0.95);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
     transform: scale(1.05);
   }
 
   .toast.very-urgent {
     background-color: rgba(255, 235, 238, 0.95);
-    box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4);
+    box-shadow: 0 8px 20px rgba(255, 0, 0, 0.5);
     transform: scale(1.1);
-    animation: pulse 1.5s infinite;
+    animation: pulse 1s infinite;
   }
 
   @keyframes pulse {
     0% { transform: scale(1.05); }
-    50% { transform: scale(1.1);    100% { transform: scale(1.05); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1.05); }
   }
 
   .notification-content {
@@ -403,41 +258,46 @@
     align-items: center;
     justify-content: space-between;
   }
+
   .notification-text {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     flex: 1;
   }
+
   .icon {
-    font-size: 16px;
-    margin-right: 4px;
+    font-size: 20px;
+    margin-right: 6px;
   }
+
   .highlight {
-    font-weight: 600;
+    font-weight: 700;
   }
+
   .countdown {
-    margin-left: 8px;
-    font-size: 12px;
+    margin-left: 10px;
+    font-size: 14px;
     white-space: nowrap;
+    font-weight: 600;
   }
 
   .countdown.urgent {
     font-weight: bold;
-    font-size: 14px;
+    font-size: 16px;
     color: #ff7f50 !important;
   }
 
   .countdown.very-urgent {
     font-weight: bold;
-    font-size: 16px;
+    font-size: 18px;
     color: #ff0000 !important;
-    animation: blink 1s infinite;
+    animation: blink 0.8s infinite;
   }
 
   @keyframes blink {
     0% { opacity: 1; }
-    50% { opacity: 0.5; }
+    50% { opacity: 0.4; }
     100% { opacity: 1; }
   }
 </style>
