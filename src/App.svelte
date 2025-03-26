@@ -118,7 +118,7 @@
     "07:00",
   ];
   const raidStartTimes: string[] = ["15", "45"];
-  const mountSpawnTimes: string[] = ["15", "30", "45", "58"];
+  const mountSpawnTimes: string[] = ["15", "30", "45"];
 
   function getTimeRemaining(targetHour: number, targetMinute: number): number {
     const now = new Date();
@@ -243,10 +243,10 @@
       if (isTestMode) {
         return {
           ...notification,
-          remaining: Math.max(0, notification.remaining - 1)
+          remaining: Math.max(0, notification.remaining - 1),
         };
       }
-      
+
       let targetHour, targetMinute;
       if (notification.type === notificationTypes.SRANK.name) {
         [targetHour, targetMinute] = notification.time.split(":").map(Number);
@@ -262,17 +262,12 @@
       };
     });
 
+    // กรองการแจ้งเตือนที่เลย window ออกไป
     notifications = notifications.filter((n) => {
       const typeConfig = Object.values(notificationTypes).find(
         (t) => t.name === n.type
       );
       const windowSeconds = typeConfig?.window || 300;
-
-      if (isTestMode) {
-        if (n.remaining > 0) return true;
-        const timeSinceZero = (Date.now() - n.createdAt) / 1000 - n.initialRemaining;
-        return timeSinceZero < windowSeconds;
-      }
 
       let targetHour, targetMinute;
       if (n.type === notificationTypes.SRANK.name) {
@@ -285,10 +280,11 @@
       const timeLeft = getTimeRemaining(targetHour, targetMinute);
       const secondsSinceEvent = timeLeft > 86000 ? (86400 - timeLeft) : -timeLeft;
 
+      // เงื่อนไข: ถ้า remaining > 0 หรือยังอยู่ใน window (secondsSinceEvent < windowSeconds)
       return (
-        timeLeft > 0 ||
-        (timeLeft >= 86340 && timeLeft < 86400) ||
-        secondsSinceEvent < windowSeconds
+        timeLeft > 0 || // ยังไม่ถึงเวลา
+        (timeLeft >= 86340 && timeLeft < 86400) || // กรณีข้ามวัน
+        secondsSinceEvent < windowSeconds // ยังอยู่ใน window หลังจากเหตุการณ์เกิด
       );
     });
   }
@@ -399,8 +395,7 @@
 
   @keyframes pulse {
     0% { transform: scale(1.05); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1.05); }
+    50% { transform: scale(1.1);    100% { transform: scale(1.05); }
   }
 
   .notification-content {
