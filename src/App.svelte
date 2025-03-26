@@ -19,10 +19,10 @@
   let notifications: Notification[] = [];
 
   const notificationTypes = {
-    DUNGEON: { name: "Dungeon Spawn", minutes: 5, window: 300, icon: "🏰", color: "#4682b4" },
-    SRANK: { name: "S-Rank Dungeon", minutes: 5, window: 300, icon: "⭐", color: "#e6a817" },
-    RAID: { name: "Raid Start", minutes: 15, window: 300, icon: "⚔️", color: "#d35400" },
-    MOUNT: { name: "Mount Spawn", minutes: 15, window: 300, icon: "🐎", color: "#2ecc71" },
+    DUNGEON: { name: "Dungeon Spawn", minutes: 5, window: 60, icon: "🏰", color: "#4682b4" },
+    SRANK: { name: "S-Rank Dungeon", minutes: 5, window: 60, icon: "⭐", color: "#e6a817" },
+    RAID: { name: "Raid Start", minutes: 15, window: 60, icon: "⚔️", color: "#d35400" },
+    MOUNT: { name: "Mount Spawn", minutes: 15, window: 60, icon: "🐎", color: "#2ecc71" },
   };
 
   onMount(() => {
