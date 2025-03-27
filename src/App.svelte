@@ -2,8 +2,6 @@
   import { onMount } from "svelte";
   import { fade, slide, fly } from "svelte/transition";
 
-  let isTestMode = false;
-
   interface Notification {
     id: string;
     type: string;
@@ -19,20 +17,38 @@
   let notifications: Notification[] = [];
 
   const notificationTypes = {
-    DUNGEON: { name: "Dungeon Spawn", minutes: 5, window: 60, icon: "🏰", color: "#4682b4" },
-    SRANK: { name: "S-Rank Dungeon", minutes: 5, window: 60, icon: "⭐", color: "#e6a817" },
-    RAID: { name: "Raid Start", minutes: 15, window: 60, icon: "⚔️", color: "#d35400" },
-    MOUNT: { name: "Mount Spawn", minutes: 15, window: 60, icon: "🐎", color: "#2ecc71" },
+    DUNGEON: {
+      name: "Dungeon Spawn",
+      minutes: 5,
+      window: 2,
+      icon: "🏰",
+      color: "#4682b4",
+    },
+    SRANK: {
+      name: "S-Rank Dungeon",
+      minutes: 5,
+      window: 2,
+      icon: "⭐",
+      color: "#e6a817",
+    },
+    RAID: {
+      name: "Raid Start",
+      minutes: 15,
+      window: 2,
+      icon: "⚔️",
+      color: "#d35400",
+    },
+    MOUNT: {
+      name: "Mount Spawn",
+      minutes: 15,
+      window: 2,
+      icon: "🐎",
+      color: "#2ecc71",
+    },
   };
 
   onMount(() => {
     console.log("Component mounted, starting interval");
-    const urlParams = new URLSearchParams(window.location.search);
-    isTestMode = urlParams.get("test") === "true";
-    if (isTestMode) {
-      console.log("Test mode activated, adding sample notifications");
-      addSampleNotifications();
-    }
     const interval = setInterval(() => {
       currentTime = new Date();
       updateNotifications();
@@ -43,22 +59,16 @@
     };
   });
 
-  function addSampleNotifications() {
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const sampleNotifications = [
-      createNotification(notificationTypes.DUNGEON.name, `${currentHour.toString().padStart(2, "0")}:${(currentMinute + 5).toString().padStart(2, "0")}`, 300),
-      createNotification(notificationTypes.RAID.name, `${currentHour.toString().padStart(2, "0")}:${(currentMinute + 1).toString().padStart(2, "0")}`, 60),
-      createNotification(notificationTypes.SRANK.name, `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`, 30),
-      createNotification(notificationTypes.MOUNT.name, `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`, 10),
-      createNotification(notificationTypes.DUNGEON.name, `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`, 0),
-    ];
-    notifications = [...notifications, ...sampleNotifications];
-  }
-
   const dungeonSpawnTimes: string[] = ["00", "30"];
-  const sRankTimes: string[] = ["13:00", "16:00", "19:00", "22:00", "01:00", "04:00", "07:00"];
+  const sRankTimes: string[] = [
+    "13:00",
+    "16:00",
+    "19:00",
+    "22:00",
+    "01:00",
+    "04:00",
+    "07:00",
+  ];
   const raidStartTimes: string[] = ["15", "45"];
   const mountSpawnTimes: string[] = ["15", "30", "45"];
 
@@ -71,83 +81,181 @@
   }
 
   function formatCountdown(seconds: number): string {
-    const mins = Math.floor(seconds / 60).toString().padStart(2, "0");
+    const mins = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
     const secs = (seconds % 60).toString().padStart(2, "0");
     return `${mins}:${secs}`;
   }
 
-  function createNotification(type: string, time: string, remaining: number): Notification {
-    const typeConfig = Object.values(notificationTypes).find((t) => t.name === type);
+  function createNotification(
+    type: string,
+    time: string,
+    remaining: number
+  ): Notification {
+    const typeConfig = Object.values(notificationTypes).find(
+      (t) => t.name === type
+    );
     const icon = typeConfig?.icon || "🔔";
     const color = typeConfig?.color || "#4682b4";
-    return { id: `${type}-${time}-${Date.now()}`, type, time, remaining, initialRemaining: remaining, createdAt: Date.now(), icon, color };
+    return {
+      id: `${type}-${time}-${Date.now()}`,
+      type,
+      time,
+      remaining,
+      initialRemaining: remaining,
+      createdAt: Date.now(),
+      icon,
+      color,
+    };
   }
 
   function checkEvents(): Notification[] {
-    if (isTestMode) return [];
     const now = new Date();
     const newNotifications: Notification[] = [];
     dungeonSpawnTimes.forEach((minute) => {
       const timeLeft = getTimeRemaining(now.getHours(), parseInt(minute));
       if (timeLeft <= 300 || (timeLeft >= 86340 && timeLeft < 86400)) {
-        newNotifications.push(createNotification(notificationTypes.DUNGEON.name, `${now.getHours().toString().padStart(2, "0")}:${minute}`, timeLeft > 86000 ? 0 : timeLeft));
+        newNotifications.push(
+          createNotification(
+            notificationTypes.DUNGEON.name,
+            `${now.getHours().toString().padStart(2, "0")}:${minute}`,
+            timeLeft > 86000 ? 0 : timeLeft
+          )
+        );
       }
     });
     sRankTimes.forEach((time) => {
       const [hour, minute] = time.split(":").map(Number);
       const timeLeft = getTimeRemaining(hour, minute);
       if (timeLeft <= 300 || (timeLeft >= 86340 && timeLeft < 86400)) {
-        newNotifications.push(createNotification(notificationTypes.SRANK.name, time, timeLeft > 86000 ? 0 : timeLeft));
+        newNotifications.push(
+          createNotification(
+            notificationTypes.SRANK.name,
+            time,
+            timeLeft > 86000 ? 0 : timeLeft
+          )
+        );
       }
     });
     raidStartTimes.forEach((minute) => {
       const timeLeft = getTimeRemaining(now.getHours(), parseInt(minute));
       if (timeLeft <= 300 || (timeLeft >= 86340 && timeLeft < 86400)) {
-        newNotifications.push(createNotification(notificationTypes.RAID.name, `${now.getHours().toString().padStart(2, "0")}:${minute}`, timeLeft > 86000 ? 0 : timeLeft));
+        newNotifications.push(
+          createNotification(
+            notificationTypes.RAID.name,
+            `${now.getHours().toString().padStart(2, "0")}:${minute}`,
+            timeLeft > 86000 ? 0 : timeLeft
+          )
+        );
       }
     });
     mountSpawnTimes.forEach((minute) => {
       const timeLeft = getTimeRemaining(now.getHours(), parseInt(minute));
       if (timeLeft <= 300 || (timeLeft >= 86340 && timeLeft < 86400)) {
-        newNotifications.push(createNotification(notificationTypes.MOUNT.name, `${now.getHours().toString().padStart(2, "0")}:${minute}`, timeLeft > 86000 ? 0 : timeLeft));
+        newNotifications.push(
+          createNotification(
+            notificationTypes.MOUNT.name,
+            `${now.getHours().toString().padStart(2, "0")}:${minute}`,
+            timeLeft > 86000 ? 0 : timeLeft
+          )
+        );
       }
     });
     return newNotifications;
   }
 
   function updateNotifications(): void {
-    if (!isTestMode) {
-      const newNotifications = checkEvents();
-      if (newNotifications.length > 0) {
-        const filteredNewNotifications = newNotifications.filter((newNotif) => {
-          return !notifications.some((existing) => existing.type === newNotif.type && existing.time === newNotif.time);
-        });
-        if (filteredNewNotifications.length > 0) notifications = [...notifications, ...filteredNewNotifications];
+    const newNotifications = checkEvents();
+    console.log("New notifications from checkEvents:", newNotifications);
+
+    if (newNotifications.length > 0) {
+      const filteredNewNotifications = newNotifications.filter((newNotif) => {
+        return !notifications.some(
+          (existing) =>
+            existing.type === newNotif.type && existing.time === newNotif.time
+        );
+      });
+      console.log(
+        "Filtered new notifications (after removing duplicates):",
+        filteredNewNotifications
+      );
+
+      if (filteredNewNotifications.length > 0) {
+        notifications = [...notifications, ...filteredNewNotifications];
+        console.log(
+          "Updated notifications array after adding new ones:",
+          notifications
+        );
       }
     }
 
     notifications = notifications.map((notification) => {
-      if (isTestMode) {
-        return { ...notification, remaining: Math.max(0, notification.remaining - 1) };
-      }
-
       let targetHour, targetMinute;
-      if (notification.type === notificationTypes.SRANK.name) [targetHour, targetMinute] = notification.time.split(":").map(Number);
-      else [targetHour, targetMinute] = [parseInt(notification.time.split(":")[0]), parseInt(notification.time.split(":")[1])];
+      if (notification.type === notificationTypes.SRANK.name) {
+        [targetHour, targetMinute] = notification.time.split(":").map(Number);
+      } else {
+        [targetHour, targetMinute] = [
+          parseInt(notification.time.split(":")[0]),
+          parseInt(notification.time.split(":")[1]),
+        ];
+      }
       const timeLeft = getTimeRemaining(targetHour, targetMinute);
+      console.log(
+        `Updating ${notification.type} at ${notification.time}: timeLeft=${timeLeft}`
+      );
       return { ...notification, remaining: timeLeft > 86000 ? 0 : timeLeft };
     });
 
     notifications = notifications.filter((n) => {
-      const typeConfig = Object.values(notificationTypes).find((t) => t.name === n.type);
-      const windowSeconds = typeConfig?.window || 300;
+      const typeConfig = Object.values(notificationTypes).find(
+        (t) => t.name === n.type
+      );
+      const windowSeconds = (typeConfig?.window || 1) * 60;
+
       let targetHour, targetMinute;
-      if (n.type === notificationTypes.SRANK.name) [targetHour, targetMinute] = n.time.split(":").map(Number);
-      else [targetHour, targetMinute] = [parseInt(n.time.split(":")[0]), parseInt(n.time.split(":")[1])];
-      const timeLeft = getTimeRemaining(targetHour, targetMinute);
-      const secondsSinceEvent = timeLeft > 86000 ? (86400 - timeLeft) : -timeLeft;
-      return timeLeft > 0 || (timeLeft >= 86340 && timeLeft < 86400) || secondsSinceEvent < windowSeconds;
+      if (n.type === notificationTypes.SRANK.name) {
+        [targetHour, targetMinute] = n.time.split(":").map(Number);
+      } else {
+        [targetHour, targetMinute] = [
+          parseInt(n.time.split(":")[0]),
+          parseInt(n.time.split(":")[1]),
+        ];
+      }
+
+      const now = new Date();
+      const eventTime = new Date(now);
+      eventTime.setHours(targetHour, targetMinute, 0, 0);
+
+      if (
+        eventTime > now &&
+        getTimeRemaining(targetHour, targetMinute) > 86340
+      ) {
+        eventTime.setDate(eventTime.getDate() - 1);
+        console.log(
+          `Adjusted eventTime for ${n.type} at ${n.time} to previous day: ${eventTime}`
+        );
+      }
+
+      const secondsSinceEvent = Math.floor(
+        (now.getTime() - eventTime.getTime()) / 1000
+      );
+
+      console.log(`Filtering ${n.type} at ${n.time}:`);
+      console.log(`- Remaining: ${n.remaining}`);
+      console.log(`- Seconds since event: ${secondsSinceEvent}`);
+      console.log(`- Window seconds: ${windowSeconds}`);
+      console.log(
+        `- Keep notification: ${(n.remaining > 0 && n.remaining < 86340) || (n.remaining === 0 && secondsSinceEvent < windowSeconds)}`
+      );
+
+      return (
+        (n.remaining > 0 && n.remaining < 86340) ||
+        (n.remaining === 0 && secondsSinceEvent < windowSeconds)
+      );
     });
+
+    console.log("Final notifications after filtering:", notifications);
   }
 
   function isUrgent(remaining: number): boolean {
@@ -175,7 +283,9 @@
           <div class="notification-text">
             <span
               class:highlight={notification.remaining <= 60}
-              style="color: {notification.remaining <= 60 ? '#ff7f50' : '#000000'}"
+              style="color: {notification.remaining <= 60
+                ? '#ff7f50'
+                : '#000000'}"
             >
               {notification.type} at {notification.time}
             </span>
@@ -184,9 +294,14 @@
             class="countdown"
             class:urgent={isUrgent(notification.remaining)}
             class:very-urgent={isVeryUrgent(notification.remaining)}
-            style="color: {!isUrgent(notification.remaining) && !isVeryUrgent(notification.remaining) ? notification.color : ''}"
+            style="color: {!isUrgent(notification.remaining) &&
+            !isVeryUrgent(notification.remaining)
+              ? notification.color
+              : ''}"
           >
-            {notification.remaining === 0 ? "Now!" : formatCountdown(notification.remaining)}
+            {notification.remaining === 0
+              ? "Now!"
+              : formatCountdown(notification.remaining)}
           </span>
         </div>
       </div>
@@ -248,9 +363,15 @@
   }
 
   @keyframes pulse {
-    0% { transform: scale(1.05); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1.05); }
+    0% {
+      transform: scale(1.05);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1.05);
+    }
   }
 
   .notification-content {
@@ -296,8 +417,14 @@
   }
 
   @keyframes blink {
-    0% { opacity: 1; }
-    50% { opacity: 0.4; }
-    100% { opacity: 1; }
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+    100% {
+      opacity: 1;
+    }
   }
 </style>
