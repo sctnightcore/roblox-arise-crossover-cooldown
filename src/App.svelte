@@ -167,8 +167,6 @@
 
   function updateNotifications(): void {
     const newNotifications = checkEvents();
-    console.log("New notifications from checkEvents:", newNotifications);
-
     if (newNotifications.length > 0) {
       const filteredNewNotifications = newNotifications.filter((newNotif) => {
         return !notifications.some(
@@ -176,17 +174,9 @@
             existing.type === newNotif.type && existing.time === newNotif.time
         );
       });
-      console.log(
-        "Filtered new notifications (after removing duplicates):",
-        filteredNewNotifications
-      );
 
       if (filteredNewNotifications.length > 0) {
         notifications = [...notifications, ...filteredNewNotifications];
-        console.log(
-          "Updated notifications array after adding new ones:",
-          notifications
-        );
       }
     }
 
@@ -201,9 +191,6 @@
         ];
       }
       const timeLeft = getTimeRemaining(targetHour, targetMinute);
-      console.log(
-        `Updating ${notification.type} at ${notification.time}: timeLeft=${timeLeft}`
-      );
       return { ...notification, remaining: timeLeft > 86000 ? 0 : timeLeft };
     });
 
@@ -232,21 +219,10 @@
         getTimeRemaining(targetHour, targetMinute) > 86340
       ) {
         eventTime.setDate(eventTime.getDate() - 1);
-        console.log(
-          `Adjusted eventTime for ${n.type} at ${n.time} to previous day: ${eventTime}`
-        );
       }
 
       const secondsSinceEvent = Math.floor(
         (now.getTime() - eventTime.getTime()) / 1000
-      );
-
-      console.log(`Filtering ${n.type} at ${n.time}:`);
-      console.log(`- Remaining: ${n.remaining}`);
-      console.log(`- Seconds since event: ${secondsSinceEvent}`);
-      console.log(`- Window seconds: ${windowSeconds}`);
-      console.log(
-        `- Keep notification: ${(n.remaining > 0 && n.remaining < 86340) || (n.remaining === 0 && secondsSinceEvent < windowSeconds)}`
       );
 
       return (
